@@ -1,4 +1,10 @@
-# juneteenth
+# Juneteenth
+
+<br>
+
+<p align="center">
+<img src ="image/sl.jpg">
+</p>
 
 <br>
 
