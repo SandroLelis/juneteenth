@@ -17,5 +17,5 @@ Lynchings in the United States, 1883 to 1941.” Socius 5:2378023119841780.
 
 <br>
 
-This projecto tries to review the previous "National Crime: A New National Data Set of Lynchings in the United States, 1883 to 1941." studies.
+This project try to reproduce the previous "National Crime: A New National Data Set of Lynchings in the United States, 1883 to 1941." studies.
 
