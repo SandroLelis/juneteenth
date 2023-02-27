@@ -1,0 +1,299 @@
+---
+title: "Juneteenth"
+author: Sandro Lelis
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, libraries, echo=FALSE, message=FALSE}
+
+library(tidyverse)
+library(readr)
+library(readxl)
+library(ggplot2)
+library(glue)
+library(ggtext)
+library(DT)
+
+```
+
+## National Lynching, 1883-1941 (Codebook)
+
+<br>
+
+These data were collected by Charles Seguin and David Rigby. They supplement existing lynching inventories to cover the contiguous United States. Details are covered in Seguin and Rigby (2019). Please cite as follows:<br>
+
+Seguin, Charles and David Rigby. 2019. National Crimes: A New National Data Set of Lynchings in the United States, 1883 to 1941. Socius 5:2378023119841780.
+
+
+<br>
+
+### About Juneteenth
+<br>
+
+<p>Juneteenth is a federal holiday in the United States commemorating the emancipation of enslaved African Americans. Deriving its name from combining "June" and "nineteenth", it is celebrated on the anniversary of General Order No. 3, issued by Major General Gordon Granger on June 19, 1865, proclaiming freedom for slaves in Texas.[7] Originating in Galveston, Juneteenth has since been observed annually in various parts of the United States, often broadly celebrating African-American culture. The day was first recognized as a federal holiday in 2021, when President Joe Biden signed the Juneteenth National Independence Day Act into law after the efforts of Lula Briggs Galloway, Opal Lee, and others.
+
+<p>Early celebrations date to 1866, at first involving church-centered community gatherings in Texas. They spread across the South and became more commercialized in the 1920s and 1930s, often centering on a food festival. Participants in the Great Migration brought these celebrations to the rest of the country. During the Civil Rights Movement of the 1960s, these celebrations were eclipsed by the nonviolent determination to achieve civil rights, but grew in popularity again in the 1970s with a focus on African American freedom and African-American arts. Beginning with Texas by proclamation in 1938, and by legislation in 1979, every U.S. state and the District of Columbia has formally recognized the holiday in some way. With its adoption in parts of Mexico, the holiday has become an international holiday. Juneteenth is celebrated by the Mascogos, descendants of Black Seminoles who escaped from slavery in 1852 and settled in Coahuila, Mexico.
+
+<p>Celebratory traditions often include public readings of the Emancipation Proclamation, singing traditional songs such as "Swing Low, Sweet Chariot" and "Lift Every Voice and Sing", and the reading of works by noted African-American writers, such as Ralph Ellison and Maya Angelou. Juneteenth celebrations may also include rodeos, street fairs, cookouts, family reunions, parties, historical reenactments, and Miss Juneteenth contests. In 2021, Juneteenth became the first new federal holiday since Martin Luther King Jr. Day was adopted in 1983.
+
+<p>Source: Wikipedia
+
+<br>
+In this project we will look for some patterns shown in details on this data, to have a realistic view on what this storytelling is about. Notice that this dataset is populated by victims that was possible to be confirmed with a valid document, this mean that not all victims are included in this dataset.
+
+<br>
+
+### Loading Dataset
+
+<br>
+
+```{r loading data, echo=TRUE}
+state_lookup <- tibble(abb = state.abb,
+       name = state.name) # convert state names.
+
+data2 <- read_delim("Data.csv", delim = ";", 
+                   escape_double = FALSE, trim_ws = TRUE)
+
+
+```
+<br>
+```{r paged.print=TRUE}
+DT::datatable(data2, width = '100%', options = list(scrollX = TRUE))
+
+```
+ <br>
+ 
+### Cleaning Data
+
+<br>
+
+```{r}
+colSums(is.na(data2)) # there is NA values.
+sum(duplicated(data2)) # there isn't duplicated values.
+
+```
+<br>
+
+### Data Manipulation
+
+<br>
+
+```{r echo=TRUE}
+
+lynchings_per_state_per_year <- data2 %>% 
+        filter(race == "Black") %>% 
+        count(year, state) %>% 
+        inner_join(., state_lookup, by = c("state" = "abb")) %>% 
+        na.omit() # Looking at Lynchings per State and per Year.
+
+colSums(is.na(lynchings_per_state_per_year)) # Checking for NA values.
+
+datatable(lynchings_per_state_per_year) 
+
+```
+
+<br>
+
+```{r echo=TRUE}
+lynchings_per_state <- lynchings_per_state_per_year %>% 
+        group_by(name) %>% 
+        summarize(N = sum(n)) %>% 
+        mutate(state = glue("{name} ({N})")) # Looking for Lynchings per State and summarize the result.
+
+
+
+```
+
+<br>
+
+```{r}
+
+datatable(lynchings_per_state)
+
+```
+
+ <br>
+ 
+### Plotting Deadly States & Countys
+
+<br>
+
+<div class='tableauPlaceholder' id='viz1677432176293' style='position: relative'><noscript><a href='#'><img alt='Deadly Countys ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthDeadlyCountys&#47;Planilha1&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='JuneteenthDeadlyCountys&#47;Planilha1' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthDeadlyCountys&#47;Planilha1&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='pt-BR' /></object></div>                
+
+``` {js, deadlycountys, echo=TRUE} 
+
+var divElement = document.getElementById('viz1677432176293');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);               
+
+```
+
+<br>
+ 
+ 
+```{r echo=TRUE}
+lynchings_per_state_per_year %>% 
+        inner_join(., lynchings_per_state, by = "name") %>%
+        arrange(N) %>% 
+        ggplot(aes(x=year, fill=n, y=name))+
+        geom_tile()+
+        scale_fill_gradient(name = "Number of\nLynchings", low = "#FFFFFF", high = "#FF0000",
+                            limits=c(0, NA))+
+        labs(x="Year", y=NULL, title = glue("Between 1883-1941 Texas had the most Lynchings"))+
+        theme_classic()+
+        theme(axis.line = element_blank(),
+              axis.ticks = element_blank(),
+              plot.title = element_textbox_simple(size = 20, face = "bold",
+                                                   margin = margin(t=10, 0, b=15, 0)),
+        plot.title.position = "plot")
+
+
+```
+ 
+<br>
+
+### Data Manipulation
+
+<br>
+
+```{r echo=TRUE}
+
+lynchings_per_year <- data2 %>% 
+        filter(race == "Black") %>% 
+        count(year) %>% 
+        na.omit() # Looking Lynching through time.
+
+```
+
+<br>
+
+```{r}
+datatable(lynchings_per_year)
+```
+
+<br>
+
+```{r include=TRUE}
+year_range <- lynchings_per_year %>% 
+        summarize(early = min(year), late = max(year)) %>% 
+        mutate(range = glue("{early} and {late}")) %>% 
+        pull(range) # Look at Lynchings year range.
+
+peak_year <- lynchings_per_year %>% 
+        top_n(n,n=1) %>% 
+        pull(year) # Pull top year.
+
+total_lynchings <- lynchings_per_year %>% 
+        summarize(N = sum(n)) # Total Lynchings.
+
+```
+
+<br>
+
+### Plotting Year Range
+
+```{r echo=TRUE}
+lynchings_per_year %>% 
+        ggplot(aes(x=year, y=n))+
+        geom_line()+
+        labs(x="Year", y="Number of Lynchings",
+             title = glue("Between {year_range} there were {total_lynchings} Black individuals lynchings with the peak accuring in {peak_year}"))+
+        theme_classic()+
+        theme(plot.title = element_textbox_simple(size = 20, face = "bold",
+                                                  margin = margin(t=10, 0, b=15, 0)),
+              plot.title.position = "plot")
+```
+
+<br>
+
+### Plotting Alleged Offense & Lynchings per year and Race
+
+<div class='tableauPlaceholder' id='viz1677434603174' style='position: relative'><noscript><a href='#'><img alt='Juneteenth | Alleged offense ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthAllegedOffense&#47;JuneteenthAllegedoffense&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='JuneteenthAllegedOffense&#47;JuneteenthAllegedoffense' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthAllegedOffense&#47;JuneteenthAllegedoffense&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='pt-BR' /></object></div>                
+
+```{js, number of lynchings, echo=FALSE}
+
+var divElement = document.getElementById('viz1677434603174');                    var vizElement = divElement.getElementsByTagName('object')[0];                    if ( divElement.offsetWidth > 800 ) { vizElement.style.minWidth='420px';vizElement.style.maxWidth='1550px';vizElement.style.width='100%';vizElement.style.minHeight='587px';vizElement.style.maxHeight='1887px';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else if ( divElement.offsetWidth > 500 ) { vizElement.style.minWidth='420px';vizElement.style.maxWidth='1550px';vizElement.style.width='100%';vizElement.style.minHeight='587px';vizElement.style.maxHeight='1887px';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else { vizElement.style.width='100%';vizElement.style.height='727px';}                     var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                
+
+```
+
+<br>
+
+#### Observations:
+
+<br>
+
+There were more lynchings for black individuals from 1880-1936 for posse mob composition.
+
+The alleged offense most taken was no allegation at all mostly and according to this dataset there were no more allegations after 1927 for this group following by murder.
+
+<br>
+
+### Plotting Type of Execution
+
+<br>
+
+<div class='tableauPlaceholder' id='viz1677435115592' style='position: relative'><noscript><a href='#'><img alt='Type of execution ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthTypeofExecution&#47;TypeofExecution&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='JuneteenthTypeofExecution&#47;TypeofExecution' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthTypeofExecution&#47;TypeofExecution&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='pt-BR' /></object></div>                
+
+```{js, type of execution, echo=FALSE}                    
+
+var divElement = document.getElementById('viz1677435115592');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.80)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                
+
+```
+
+<br>
+
+#### Observations:
+
+<br>
+
+The most method of these lynching were by hangging and the highest counts were on black race.
+
+<br>
+
+### Plotting Type of Mob executing type of victim
+
+<br>
+
+<div class='tableauPlaceholder' id='viz1677435717511' style='position: relative'><noscript><a href='#'><img alt='Type of Mob executing type of Race ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthMobType&#47;TypeofMob&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='JuneteenthMobType&#47;TypeofMob' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthMobType&#47;TypeofMob&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='pt-BR' /></object></div>                
+
+
+```{js, type of mob, echo=FALSE}                    
+
+var divElement = document.getElementById('viz1677435717511');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*1.3)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                
+
+```
+
+<br>
+
+### Rate of Lynchings by Race
+
+<br>
+
+<div class='tableauPlaceholder' id='viz1677436040466' style='position: relative'><noscript><a href='#'><img alt='Rate of Lynchings by Race | Year ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthMobType&#47;LynchingsbyRaceYear&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='JuneteenthMobType&#47;LynchingsbyRaceYear' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ju&#47;JuneteenthMobType&#47;LynchingsbyRaceYear&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='pt-BR' /><param name='filter' value='publish=yes' /></object></div>                
+
+
+```{js, lynchings by year, echo=FALSE}                    
+
+var divElement = document.getElementById('viz1677436040466');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                
+
+```
+
+<br>
+
+### Descriptive Analysis:
+
+<br>
+
+Despite of the unaccurated dataset, this dataset lead us to conclude that there were significant lychings for white race individuals, mostly related to outlaws, as we can observe by the circunstaces of the lychings mostly with a mob composition by "masked men" revealing gang rivals, "vigilance commitee" revealing lynchings for crime comitted and escape, "party of texans" revealing rivalry and "band of indians" .
+
+In this analysis it was also excluded white hispanic that were refered as white race individuals. Although it was noticed that black individuals suffered the most deaths by lynching in this dataset, we can observe in the clustering plot that black individuals populate deaths from cluster 2 to cluster 5, while the remaining races were grouped in cluster 1 wich have the lowest death rates, and most didn't had any allegation, mostly by hangging and shot.
+
+
+
+
+
+
+
